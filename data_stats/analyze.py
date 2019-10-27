@@ -74,39 +74,10 @@ print(f"Number of relevant users: {relevant_users}")
 # print_map(statistics)
 
 # gender
-labels = []
-fickle_vals = []
-rigid_vals = []
-for k in statistics["gender"]:
-    labels += [k]
-    fickle_vals += [statistics["gender"][k]["fickle"]]
-    rigid_vals += [statistics["gender"][k]["rigid"]]
-
-pie_plot(labels, fickle_vals, "gender_fickle.png")
-pie_plot(labels, rigid_vals, "gender_rigid.png")
+aggregate_and_plot(statistics, "gender")
 
 # Political
-labels = []
-fickle_vals = []
-rigid_vals = []
-for k in statistics["pol"]:
-    if k != "Labor":
-        labels += [k]
-        fickle_vals += [statistics["pol"][k]["fickle"]]
-        rigid_vals += [statistics["pol"][k]["rigid"]]
-
-pie_plot(labels, fickle_vals, "pol_fickle.png")
-pie_plot(labels, rigid_vals, "pol_rigid.png")
-
+aggregate_and_plot(statistics, "pol", "Labor")
 
 # Religious
-labels = []
-fickle_vals = []
-rigid_vals = []
-for k in statistics["rel"]:
-    labels += [k]
-    fickle_vals += [statistics["rel"][k]["fickle"]]
-    rigid_vals += [statistics["rel"][k]["rigid"]]
-
-pie_plot(labels, fickle_vals, "rel_fickle.png")
-pie_plot(labels, rigid_vals, "rel_rigid.png")
+aggregate_and_plot(statistics, "rel")

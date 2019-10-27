@@ -54,6 +54,17 @@ def save_fig(fig_name):
     plt.savefig('../Figures/' + fig_name)
     plt.close()
 
+def aggregate_and_plot(statistics, inner_key, exclude=None):
+    labels = []
+    fickle_vals = []
+    rigid_vals = []
+    for k in statistics[inner_key]:
+        if not exclude or k != exclude:
+            labels += [k]
+            fickle_vals += [statistics[inner_key][k]["fickle"]]
+            rigid_vals += [statistics[inner_key][k]["rigid"]]
+    pie_plot(labels, fickle_vals, inner_key + "_fickle.png")
+    pie_plot(labels, rigid_vals, inner_key + "_rigid.png")
 
 def group_plot(data, data_key, fig_name):
     df = pd.DataFrame(data, columns=data_key)
