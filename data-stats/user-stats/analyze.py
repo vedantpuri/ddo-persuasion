@@ -50,7 +50,7 @@ if not os.path.isfile(analyze_dump_file):
         political_ideology = user["political_ideology"]
         religious_ideology = user["religious_ideology"]
         decisiveness = ""
-        if (u["changed"]/(u["unchanged"]+u["changed"])) > 0.6:
+        if (u["changed"]/(u["unchanged"]+u["changed"])) > threshold:
             decisiveness = "decisive"
         else:
             decisiveness = "undecisive"
