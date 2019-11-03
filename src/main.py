@@ -1,4 +1,6 @@
+import sys
 import json
+import os.path
 import copy
 import numpy as np
 from sklearn.linear_model import LogisticRegression
@@ -156,8 +158,37 @@ def run_training(X, Y, voters, features, message):
     print('\tAccuracy: ',np.mean(accuracy),'\n')
     print('='*50,'\n')
 
+def parse_config(config_file):
+    # Check if file exists
+    fn_map = {"was_convinced": was_convinced, "was_flipped": was_flipped}
+    if not os.path.isfile(config_file):
+        print("Config file does not exist. Make sure path is correct.")
+        exit()
+    with open(config_file, 'r') as f:
+        config = json.load(f)
+    # Validate voter_fn
+    if config["voter_fn"] not in fn_map:
+        print("Provided voter function does not exist.")
+        exit()
+    # Validate category
+    if config["category"] == "":
+        config["category"] = None
+    # TODO: Add a check to see if category is valid
+    # String to function conversion
+    config["voter_fn"] = fn_map[config["voter_fn"]]
+    # Setup features in tuple format
+    for k in config["user_features"]:
+        config["user_features"][k] = config["user_features"][k][0], config["user_features"][k][1]
+    for k in config["ling_features"]:
+        config["ling_features"][k] = config["ling_features"][k][0], config["ling_features"][k][1]
+
+    return config
 
 if __name__=="__main__":
+    if len(sys.argv) < 2:
+        print("Config File not passed in. Quitting ...")
+        exit()
+    configuration = parse_config(sys.argv[1])
     # LOAD DATA
     print('\n','='*50,'\n\tLoading Dataset...\n')
     with open('debate_dataset/users.json', 'r') as f:
@@ -171,8 +202,8 @@ if __name__=="__main__":
     bigissues_dict = build_bigissues_dict(users)
 
     # SPECIFY CATEGORIES, CREATE MODEL, FORMAT FEATURES
-    category = 'Politics' # one of: {None, 'Politics', 'Religion', 'Miscellaneous', ...}
-    voter_function = was_convinced # one of: {was_convinced, was_flipped}
+    category = configuration['category'] # one of: {None, 'Politics', 'Religion', 'Miscellaneous', ...}
+    voter_function = configuration['voter_fn'] # one of: {was_convinced, was_flipped}
     print('\tFiltered category of debates: ',category,'\n')
     model = LogRegModel(category)
     vectorizer = TfidfVectorizer(ngram_range=(1,3),max_features=50,stop_words='english')
@@ -181,35 +212,11 @@ if __name__=="__main__":
     X = scaler.fit_transform(X)
 
     # SPECIFY FEATURES AND RUN MODEL
-    user_features = { # userbased features
-                'persuade'      :(True,0),
-                'opinion'       :(True,2),
-                'pol_ideology'  :(True,2),
-                'rel_ideology'  :(True,2),
-                'decidedness'   :(True,1),
-                'undecidedness' :(True,1),
-                'gender'        :(True,4)}
-    ling_features = { # linguistic features
-                'length'        :(True,1),
-                'ref_opp'       :(True,1),
-                'politeness'    :(True,1),
-                'evidence'      :(True,1),
-                'sentiment'     :(True,3),
-                'subjectivity'  :(True,4),
-                'swear'         :(True,1),
-                'connotation'   :(True,2),
-                'pronouns'      :(True,3),
-                'modals'        :(True,9),
-                'spelling'      :(True,1),
-                'numbers'       :(True,1),
-                'excl_marks'    :(True,1),
-                'questions'     :(True,1),
-                'type_ratio'    :(True,1),
-                'links'         :(True,1),
-                'arg_lex'       :(True,17),
-                'tfidf'         :(True,50)}
+    user_features = configuration['user_features']
+    ling_features = configuration['ling_features']
     features = (user_features, ling_features)
     message = '+ user + persuade + orig linguistic'
+
     run_training(X, Y, voters, features, message)
 
     run_baseline(Y)
