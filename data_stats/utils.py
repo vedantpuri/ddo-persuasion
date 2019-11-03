@@ -71,6 +71,13 @@ def group_plot(data, data_key, fig_name):
     df.pivot(data_key[1], data_key[0], data_key[2]).plot(kind='bar', figsize=(15,10))
     save_fig(fig_name)
 
+def prepare_for_plot(data_map):
+    data = []
+    for k in data_map:
+         data.append(["fickle", k, data_map[k]["fickle"]])
+         data.append(["rigid", k, data_map[k]["rigid"]])
+    return data
+
 def pie_plot(labels, values, fig_name):
     plt.pie(values, labels=labels)
     save_fig(fig_name)

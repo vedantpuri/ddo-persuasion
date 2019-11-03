@@ -125,10 +125,28 @@ print(f"Number of relevant users: {relevant_users}")
 # print_map(statistics)
 
 # gender
-aggregate_and_plot(statistics, "gender")
+group_plot(prepare_for_plot(gender_props), ['firmness', 'Gender', 'val'], 'gender_firmness.png')
 
 # Political
-aggregate_and_plot(statistics, "pol", "Labor")
+group_plot(prepare_for_plot(pol_props), ['firmness', 'Pol Ideology', 'val'], 'pol_firmness.png')
 
 # Religious
-aggregate_and_plot(statistics, "rel")
+group_plot(prepare_for_plot(rel_props), ['firmness', 'Rel Ideology', 'val'], 'rel_firmness.png')
+
+
+# Age
+labels, fickle_vals, rigid_vals = [], [], []
+for k in age_map:
+    labels += [k]
+    fickle_vals += [age_map[k]["fickle"]]
+    rigid_vals += [age_map[k]["rigid"]]
+pie_plot(labels, fickle_vals, "age_fickle.png")
+pie_plot(labels, rigid_vals, "age_rigid.png")
+
+
+
+for k in age_map:
+    total = age_map[k]["fickle"] + age_map[k]["rigid"]
+    age_map[k]["fickle"] /= total
+    age_map[k]["rigid"] /= total
+group_plot(prepare_for_plot(age_map), ['firmness', 'Age range', 'val'], 'age_firmness.png')
