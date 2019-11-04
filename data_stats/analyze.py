@@ -38,10 +38,16 @@ if not os.path.isfile(analyze_dump_file):
             decisiveness = ""
             if user_data["unchanged"]+user_data["changed"] > 1:
                 relevant_users += 1
-                if (user_data["changed"]/(user_data["unchanged"]+user_data["changed"])) > threshold:
+                frac_changed = user_data["changed"]/(user_data["unchanged"]+user_data["changed"])
+                # If user changes his mind more than 60% (threshold) of the times
+                if frac_changed > threshold:
                     decisiveness = "fickle"
-                else:
+                # If user changes his mind less than 40% (100 - 60)% of the times
+                elif frac_changed > 1 - threshold:
                     decisiveness = "rigid"
+                else:
+                    # Irrelevant user
+                    continue
 
                 if gender not in ["Male", "Female", "Prefer not to say"]:
                     gender = "Other"
@@ -126,12 +132,15 @@ print(f"Number of relevant users: {relevant_users}")
 
 # gender
 group_plot(prepare_for_plot(gender_props), ['firmness', 'Gender', 'val'], 'gender_firmness.png')
+aggregate_and_plot(statistics, "gender")
 
 # Political
 group_plot(prepare_for_plot(pol_props), ['firmness', 'Pol Ideology', 'val'], 'pol_firmness.png')
+aggregate_and_plot(statistics, "pol", "Labor")
 
 # Religious
 group_plot(prepare_for_plot(rel_props), ['firmness', 'Rel Ideology', 'val'], 'rel_firmness.png')
+aggregate_and_plot(statistics, "rel")
 
 
 # Age
