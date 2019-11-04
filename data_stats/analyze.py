@@ -99,8 +99,11 @@ def calc_proportions(key, statistics):
         ret_map[k] = {"fickle": 0, "rigid": 0}
         ret_map[k]["fickle"] = statistics[key][k]["fickle"] / total
         ret_map[k]["rigid"] = statistics[key][k]["rigid"] / total
+        ret_map[k]["sample size"] = total
 
     return ret_map
+
+DIVIDER = "="*50
 
 age_map = {}
 total_age_available = 0
@@ -109,25 +112,24 @@ for k in statistics["age"]:
     group = str(k*10) + "-" + str(k*10 + 9)
     age_map[group] = statistics["age"][k]
 
-print("Age wise statistics\n")
+print(DIVIDER + "\nAge wise statistics\n" + DIVIDER)
 print_map(age_map)
 print(f"Total users for which age available: {total_age_available}\n")
 
-print("Gender-wise statistics\n")
+print(DIVIDER + "\nGender-wise statistics\n"  + DIVIDER)
 gender_props = calc_proportions("gender", statistics)
-print_map(gender_props)
-print()
-print("Political ideology-wise statistics\n")
+print_map_rec(gender_props)
+
+print(DIVIDER + "\nPolitical ideology-wise statistics\n" + DIVIDER)
 pol_props = calc_proportions("pol", statistics)
-print_map(pol_props)
-print()
-print("Religious ideology-wise statistics\n")
+print_map_rec(pol_props)
+
+print(DIVIDER + "\nReligious ideology-wise statistics\n" + DIVIDER)
 rel_props = calc_proportions("rel", statistics)
-print_map(rel_props)
-print()
+print_map_rec(rel_props)
 
 # Data analysis
-print(f"Number of relevant users: {relevant_users}")
+print(DIVIDER + f"\nNumber of relevant users: {relevant_users}\n" + DIVIDER)
 # print_map(statistics)
 
 # gender

@@ -81,3 +81,9 @@ def prepare_for_plot(data_map):
 def pie_plot(labels, values, fig_name):
     plt.pie(values, labels=labels)
     save_fig(fig_name)
+
+def print_map_rec(input_map):
+    for k in input_map:
+        print("\033[1m" + k +"\033[0m")
+        print_map(input_map[k])
+        print()
