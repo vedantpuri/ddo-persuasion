@@ -1,14 +1,14 @@
 {
-  "category": "Politics",
+  "category": "",
   "voter_fn": "was_convinced",
   "user_features" : {
-                  "persuade":       [true,0],
-                  "opinion":        [true,2],
-                  "pol_ideology":   [true,2],
-                  "rel_ideology":   [true,2],
-                  "decidedness":    [true,1],
-                  "undecidedness":  [true,1],
-                  "gender":         [true,4]
+                  "persuade":       [false,0],
+                  "opinion":        [false,2],
+                  "pol_ideology":   [false,2],
+                  "rel_ideology":   [false,2],
+                  "decidedness":    [false,1],
+                  "undecidedness":  [false,1],
+                  "gender":         [false,4]
                 },
 "ling_features" : {
               "length"        :[true,1],

@@ -1,0 +1,33 @@
+{
+  "category": "",
+  "voter_fn": "was_convinced",
+  "user_features" : {
+                  "persuade":       [true,0],
+                  "opinion":        [true,2],
+                  "pol_ideology":   [true,2],
+                  "rel_ideology":   [true,2],
+                  "decidedness":    [true,1],
+                  "undecidedness":  [true,1],
+                  "gender":         [true,4]
+                },
+"ling_features" : {
+              "length"        :[true,1],
+              "ref_opp"       :[true,1],
+              "politeness"    :[true,1],
+              "evidence"      :[true,1],
+              "sentiment"     :[true,3],
+              "subjectivity"  :[true,4],
+              "swear"         :[true,1],
+              "connotation"   :[true,2],
+              "pronouns"      :[true,3],
+              "modals"        :[true,9],
+              "spelling"      :[true,1],
+              "numbers"       :[true,1],
+              "excl_marks"    :[true,1],
+              "questions"     :[true,1],
+              "type_ratio"    :[true,1],
+              "links"         :[true,1],
+              "arg_lex"       :[true,17],
+              "tfidf"         :[true,50]}
+
+}
