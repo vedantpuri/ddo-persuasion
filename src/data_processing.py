@@ -11,33 +11,6 @@ def filter_category(debates_dict, category):
     else:
         return {k:v for k,v in debates_dict.items() if v['category']==category and len(v['votes'])>0}
 
-def was_convinced(vote):
-    '''
-    Returns true if the user was undecided before the debate and agrees with
-    one side after the debate.
-    '''
-    if 'Tied' not in vote['votes_map'].keys():
-        return False
-    undecided_before = vote['votes_map']['Tied']['Agreed with before the debate'] == True
-    undecided_after = vote['votes_map']['Tied']['Agreed with after the debate'] == True
-    return undecided_before and not undecided_after
-
-def was_flipped(vote):
-    '''
-    Returns true if the user was on one side before the debate and agrees with
-    the opposite side after the debate.
-    '''
-    #TODO
-    if 'Tied' not in vote['votes_map'].keys():
-        return False
-    undecided_before = vote['votes_map']['Tied']['Agreed with before the debate'] == True
-    undecided_after = vote['votes_map']['Tied']['Agreed with after the debate'] == True
-    if not undecided_after and not undecided_before:
-        for username, vote_data in vote['votes_map'].items():
-            if vote_data['Agreed with before the debate'] != vote_data['Agreed with after the debate']:
-                return True
-    return False
-
 def changed_mind(vote):
     '''
     Returns true if the user changed their agreement before the debate and
@@ -54,10 +27,13 @@ def get_winner(votes_map):
     '''
     Returns username of debate winner for an individual vote.
     '''
-    wins = [user for user,v in votes_map.items() if v['Agreed with after the debate']]
-    return wins[0]
+    for user,v in votes_map.items():
+        if 'Agreed with after the debate' in v and 'Agreed with before the debate' in v:
+            if v['Agreed with after the debate'] and not v['Agreed with before the debate']:
+                return 1
+    return 0
 
-def votes_to_labels(users, votes, voter_function):
+def votes_to_labels(users, votes):
     '''
     Takes a list of votes and returns a list of voter usernames and a list of
     winner usernames, with corresponding indices. Output list is dependent on
@@ -65,14 +41,14 @@ def votes_to_labels(users, votes, voter_function):
     boolean, e.g. was_flipped, was_convinced
     '''
     voters = []
-    winners = []
+    labels = []
     for vote in votes:
-        if voter_function(vote) and vote['user_name'] in users.keys():
+        if vote['user_name'] in users.keys():
             voters.append(vote['user_name'])
-            winners.append(get_winner(vote['votes_map']))
-    return voters, winners
+            labels.append(get_winner(vote['votes_map']))
+    return voters, labels
 
-def parse_debates(debate_dict, users, voter_function):
+def parse_debates(debate_dict, users):
     '''
     Parses the original debate dictionary based on voter_function, which specifies
     which voters to generate examples for (e.g. convinced from the middle).
@@ -85,10 +61,10 @@ def parse_debates(debate_dict, users, voter_function):
     debate_text = []
     debaters = []
     debate_voters = []
-    debate_winners = []
+    debate_labels = []
 
     for name, debate in debate_dict.items():
-        voters, winners = votes_to_labels(users, debate['votes'], voter_function)
+        voters, labels = votes_to_labels(users, debate['votes'])
 
         if debate['participant_1_position'] == 'Pro':
             pro_debater = debate['participant_1_name']
@@ -110,7 +86,6 @@ def parse_debates(debate_dict, users, voter_function):
             debater_list = (pro_debater,con_debater)
             debaters.append(debater_list)
             debate_voters.append(voters)
-            winner_idxs = [debater_list.index(user) for user in winners]
-            debate_winners.append(winner_idxs)
+            debate_labels.append(labels)
 
-    return debate_text, debaters, debate_voters, debate_winners
+    return debate_text, debaters, debate_voters, debate_labels

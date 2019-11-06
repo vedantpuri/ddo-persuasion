@@ -29,7 +29,7 @@ class LogRegModel():
         '''
         self.model.predict(X)
 
-    def extract_features(self, voter_function, all_debates, users, bigissues_dict):
+    def extract_features(self, all_debates, users, bigissues_dict):
         '''
         From the debates and users dictionaries, processes data into the form
         needed for model input. This includes:
@@ -41,7 +41,7 @@ class LogRegModel():
             - generates labels into Y: 0 for 'pro' debater win, 1 for 'con'
         '''
         debates = filter_category(all_debates, self.category)
-        debate_text, debaters, debate_voters, debate_winners = parse_debates(debates, users, voter_function)
+        debate_text, debaters, debate_voters, labels = parse_debates(debates, users)
         text_list = [item for sublist in debate_text for item in sublist]
         text_features = [text_to_features(text) for text in debate_text]
         vectorizer.fit(text_list)
@@ -52,6 +52,7 @@ class LogRegModel():
         X_linguistic = []
         Y = []
         for debate_idx,voters in enumerate(debate_voters):
+            print(debate_idx)
             debater1, debater2 = debaters[debate_idx]
             for voter in voters:
                 user_features = []
@@ -66,7 +67,7 @@ class LogRegModel():
                 X_userbased.append(user_features)
             t_features = np.concatenate((text_features[debate_idx], tfidf_features[debate_idx]))
             X_linguistic.extend([t_features]*len(voters))
-            Y.extend(debate_winners[debate_idx])
+            Y.extend(labels[debate_idx])
 
         X = np.concatenate((X_userbased, X_linguistic), axis=1)
         Y = np.array(Y)
@@ -141,17 +142,17 @@ def run_training(X, Y, voters, features, message):
         Y_train, Y_test = Y[train_idx], Y[test_idx]
 
         # ADD PERSUADABILITY FEATURE FOR TRAINING GROUP
-        if features[0]['persuade'][0]:
-            v_train = [voters[idx] for idx in train_idx]
-            p = []
-            for voter in v_train:
-                p.append(get_persuadability(users, v_train, voter))
-            X_train = np.insert(X_train,0,p,axis=1)
-            v_test = [voters[idx] for idx in test_idx]
-            p = []
-            for voter in v_test:
-                p.append(get_persuadability(users, v_test, voter))
-            X_test = np.insert(X_test,0,p,axis=1)
+        # if features[0]['persuade'][0]:
+        #     v_train = [voters[idx] for idx in train_idx]
+        #     p = []
+        #     for voter in v_train:
+        #         p.append(get_persuadability(users, v_train, voter))
+        #     X_train = np.insert(X_train,0,p,axis=1)
+        #     v_test = [voters[idx] for idx in test_idx]
+        #     p = []
+        #     for voter in v_test:
+        #         p.append(get_persuadability(users, v_test, voter))
+        #     X_test = np.insert(X_test,0,p,axis=1)
 
         model.fit(X_train, Y_train)
         accuracy.append(model.evaluate(X_test, Y_test))
@@ -185,15 +186,15 @@ def parse_config(config_file):
     return config
 
 if __name__=="__main__":
-    if len(sys.argv) < 2:
-        print("Config File not passed in. Quitting ...")
-        exit()
-    configuration = parse_config(sys.argv[1])
+    # if len(sys.argv) < 2:
+    #     print("Config File not passed in. Quitting ...")
+    #     exit()
+    # configuration = parse_config(sys.argv[1])
     # LOAD DATA
     print('\n','='*50,'\n\tLoading Dataset...\n')
-    with open('debate_dataset/users.json', 'r') as f:
+    with open('../debatedata/users.json', 'r') as f:
         users = json.load(f)
-    with open('debate_dataset/debates.json', 'r') as f:
+    with open('../debatedata/debates.json', 'r') as f:
         all_debates = json.load(f)
     print('\t',len(all_debates),' debates and ',len(users),' users loaded\n')
 
@@ -202,18 +203,46 @@ if __name__=="__main__":
     bigissues_dict = build_bigissues_dict(users)
 
     # SPECIFY CATEGORIES, CREATE MODEL, FORMAT FEATURES
-    category = configuration['category'] # one of: {None, 'Politics', 'Religion', 'Miscellaneous', ...}
-    voter_function = configuration['voter_fn'] # one of: {was_convinced, was_flipped}
+    # category = configuration['category'] # one of: {None, 'Politics', 'Religion', 'Miscellaneous', ...}
+    category = 'Politics'  # one of: {None, 'Politics', 'Religion', 'Miscellaneous', ...}
     print('\tFiltered category of debates: ',category,'\n')
     model = LogRegModel(category)
     vectorizer = TfidfVectorizer(ngram_range=(1,3),max_features=50,stop_words='english')
-    X,Y,voters = model.extract_features(voter_function, all_debates, users, bigissues_dict)
+    X,Y,voters = model.extract_features(all_debates, users, bigissues_dict)
     scaler = StandardScaler()
     X = scaler.fit_transform(X)
+    print(X.shape)
 
     # SPECIFY FEATURES AND RUN MODEL
-    user_features = configuration['user_features']
-    ling_features = configuration['ling_features']
+    # user_features = configuration['user_features']
+    # ling_features = configuration['ling_features']
+    user_features = {  # userbased features
+        'persuade': (True, 0),
+        'opinion': (True, 2),
+        'pol_ideology': (True, 2),
+        'rel_ideology': (True, 2),
+        'decidedness': (True, 1),
+        'undecidedness': (True, 1),
+        'gender': (True, 4)}
+    ling_features = {  # linguistic features
+        'length': (True, 1),
+        'ref_opp': (True, 1),
+        'politeness': (True, 1),
+        'evidence': (True, 1),
+        'sentiment': (True, 3),
+        'subjectivity': (True, 4),
+        'swear': (True, 1),
+        'connotation': (True, 2),
+        'pronouns': (True, 3),
+        'modals': (True, 9),
+        'spelling': (True, 1),
+        'numbers': (True, 1),
+        'excl_marks': (True, 1),
+        'questions': (True, 1),
+        'type_ratio': (True, 1),
+        'links': (True, 1),
+        'arg_lex': (True, 17),
+        'tfidf': (True, 50)}
     features = (user_features, ling_features)
     message = '+ user + persuade + orig linguistic'
 

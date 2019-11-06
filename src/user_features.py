@@ -1,40 +1,40 @@
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import scipy.spatial as sp
-from data_processing import changed_mind, was_flipped, was_convinced
+# from data_processing import changed_mind, was_flipped, was_convinced
 
-def build_persuade_counts(debates_dict, from_middle=False):
-    '''
-    Takes the original dictionary of debates and returns the following:
-    persuade_counts: {user_name: {category1: number of times user was convinced
-        in a debate of category 1, ...}, ...}
-    participate_counts: {user_name: {category1: number of debates of category 1
-        user voted on, ...}, ...}
-    '''
-    persuade_counts = {}
-    participate_counts = {}
-    for _, debate in debates_dict.items():
-        for vote in debate['votes']:
-            user = vote['user_name']
-            category = debate['category']
-
-            if user not in participate_counts.keys():
-                participate_counts[user] = {category:1}
-            else:
-                participate_counts[user][category] = participate_counts[user].get(category,0) + 1
-
-            if from_middle:
-                persuade_check = was_convinced
-            else:
-                persuade_check = changed_mind
-
-            if persuade_check(vote):
-                if user not in persuade_counts.keys():
-                    persuade_counts[user] = {category:1}
-                else:
-                    persuade_counts[user][category] = persuade_counts[user].get(category,0) + 1
-
-    return persuade_counts, participate_counts
+# def build_persuade_counts(debates_dict, from_middle=False):
+#     '''
+#     Takes the original dictionary of debates and returns the following:
+#     persuade_counts: {user_name: {category1: number of times user was convinced
+#         in a debate of category 1, ...}, ...}
+#     participate_counts: {user_name: {category1: number of debates of category 1
+#         user voted on, ...}, ...}
+#     '''
+#     persuade_counts = {}
+#     participate_counts = {}
+#     for _, debate in debates_dict.items():
+#         for vote in debate['votes']:
+#             user = vote['user_name']
+#             category = debate['category']
+#
+#             if user not in participate_counts.keys():
+#                 participate_counts[user] = {category:1}
+#             else:
+#                 participate_counts[user][category] = participate_counts[user].get(category,0) + 1
+#
+#             if from_middle:
+#                 persuade_check = was_convinced
+#             else:
+#                 persuade_check = changed_mind
+#
+#             if persuade_check(vote):
+#                 if user not in persuade_counts.keys():
+#                     persuade_counts[user] = {category:1}
+#                 else:
+#                     persuade_counts[user][category] = persuade_counts[user].get(category,0) + 1
+#
+#     return persuade_counts, participate_counts
 
 def build_bigissues_dict(users):
     '''
