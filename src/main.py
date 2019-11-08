@@ -2,6 +2,7 @@ import sys
 import json
 import os.path
 import copy
+import pickle
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
@@ -12,25 +13,35 @@ from data_processing import parse_debates, filter_category
 from user_features import *
 from language_features import text_to_features
 
-class LogRegModel():
+
+class LogRegModel:
     def __init__(self, category):
-        '''
+        """
         Creates a Logistic Regression Model instance.
 
         :param category: string or None, specifies the category of debates to
             filter for when processing the data for model input
-        '''
-        self.model = LogisticRegression(solver='lbfgs',max_iter=1000)
+        """
+        self.model = LogisticRegression(solver="lbfgs", max_iter=1000)
         self.category = category
 
     def __call__(self, X):
-        '''
+        """
         Returns predicted labels for samples in X.
-        '''
+        """
         self.model.predict(X)
 
+    def form_dict(self, debate_keys, text_features):
+        """
+        Convert debate key to feature into dict form
+        """
+        ret_map = {}
+        for idx in range(len(debate_keys)):
+            ret_map[debate_keys[idx]] = text_features[idx]
+        return ret_map
+
     def extract_features(self, all_debates, users, bigissues_dict):
-        '''
+        """
         From the debates and users dictionaries, processes data into the form
         needed for model input. This includes:
             - filter debates for category
@@ -39,88 +50,124 @@ class LogRegModel():
             - generates user-based feature vecs for each voter/debater pair
             - concatenates all features into X
             - generates labels into Y: 0 for 'pro' debater win, 1 for 'con'
-        '''
+        """
         debates = filter_category(all_debates, self.category)
-        debate_text, debaters, debate_voters, labels = parse_debates(debates, users)
+        debate_keys, debate_text, debaters, debate_voters, labels = parse_debates(
+            debates, users
+        )
         text_list = [item for sublist in debate_text for item in sublist]
-        text_features = [text_to_features(text) for text in debate_text]
+        # check if pickle file exists
+        # if does not exist
+        if not os.path.isfile("ttf.pickle"):
+            print("No pickle file found")
+            text_features = []
+            for text in debate_text:
+                to_add = text_to_features(text)
+                # print(to_add)
+                # exit()
+                text_features += [to_add]
+            fileObject = open("ttf.pickle", "wb")
+            print("Length of text_features", len(text_features))
+            print("Length of debate_keys", len(debate_keys))
+            text_features_dict = self.form_dict(debate_keys, text_features)
+            pickle.dump(text_features_dict, fileObject)
+            fileObject.close()
+            # save to pickle
+        else:
+            print("Pickle file found")
+            fileObject = open("ttf.pickle", "rb")
+            ttf = pickle.load(fileObject)
+            text_features = [ttf[k] for k in debate_keys]
+            fileObject.close()
+
         vectorizer.fit(text_list)
         tfidf_features = np.array(vectorizer.transform(text_list).toarray())
-        tfidf_features = tfidf_features.reshape((int(tfidf_features.shape[0]/2),100))
+        tfidf_features = tfidf_features.reshape((int(tfidf_features.shape[0] / 2), 100))
 
         X_userbased = []
         X_linguistic = []
         Y = []
-        for debate_idx,voters in enumerate(debate_voters):
-            print(debate_idx)
+        for debate_idx, voters in enumerate(debate_voters):
+            # print(debate_idx)
             debater1, debater2 = debaters[debate_idx]
             for voter in voters:
                 user_features = []
-                user_features.append(get_bigissues(bigissues_dict,voter,debater1))
-                user_features.append(get_bigissues(bigissues_dict,voter,debater2))
-                user_features.append(get_matching(users,voter,debater1,'Politics'))
-                user_features.append(get_matching(users,voter,debater2,'Politics'))
-                user_features.append(get_matching(users,voter,debater1,'Religion'))
-                user_features.append(get_matching(users,voter,debater2,'Religion'))
-                user_features.extend(get_decidedness(bigissues_dict,voter))
-                user_features.extend(get_gender(users,voter,debater1,debater2))
+                user_features.append(get_bigissues(bigissues_dict, voter, debater1))
+                user_features.append(get_bigissues(bigissues_dict, voter, debater2))
+                user_features.append(get_matching(users, voter, debater1, "Politics"))
+                user_features.append(get_matching(users, voter, debater2, "Politics"))
+                user_features.append(get_matching(users, voter, debater1, "Religion"))
+                user_features.append(get_matching(users, voter, debater2, "Religion"))
+                user_features.extend(get_decidedness(bigissues_dict, voter))
+                user_features.extend(get_gender(users, voter, debater1, debater2))
                 X_userbased.append(user_features)
-            t_features = np.concatenate((text_features[debate_idx], tfidf_features[debate_idx]))
-            X_linguistic.extend([t_features]*len(voters))
+            t_features = np.concatenate(
+                (text_features[debate_idx], tfidf_features[debate_idx])
+            )
+            X_linguistic.extend([t_features] * len(voters))
             Y.extend(labels[debate_idx])
 
         X = np.concatenate((X_userbased, X_linguistic), axis=1)
         Y = np.array(Y)
         voters = [item for sublist in debate_voters for item in sublist]
-        print('\tGenerated',X.shape[0],' samples from ',len(debate_text),' debates after filtering\n','='*50)
+        print(
+            "\tGenerated",
+            X.shape[0],
+            " samples from ",
+            len(debate_text),
+            " debates after filtering\n",
+            "=" * 50,
+        )
         return X, Y, voters
 
     def filter_features(self, X, feature_dicts):
-        '''
+        """
         Filters X, the inputs for model training, to contain only the features
         specified in feature_dict.
-        '''
+        """
         feature_bools = []
         user_features, ling_features = feature_dicts
         for incl_feat, num_vals in user_features.values():
             if incl_feat:
-                feature_bools.extend([1]*num_vals)
+                feature_bools.extend([1] * num_vals)
             else:
-                feature_bools.extend([0]*num_vals)
+                feature_bools.extend([0] * num_vals)
         for i in range(2):
             for incl_feat, num_vals in ling_features.values():
                 if incl_feat:
-                    feature_bools.extend([1]*num_vals)
+                    feature_bools.extend([1] * num_vals)
                 else:
-                    feature_bools.extend([0]*num_vals)
+                    feature_bools.extend([0] * num_vals)
         feature_idxs = np.nonzero(feature_bools)[0]
-        return X[:,feature_idxs]
+        return X[:, feature_idxs]
 
     def fit(self, X, Y):
-        '''
+        """
         Fits the model on the input training data and labels.
-        '''
-        self.model.fit(X,Y)
+        """
+        self.model.fit(X, Y)
 
     def evaluate(self, X, Y):
-        '''
+        """
         Returns the mean accuracy on the input test data and labels.
-        '''
-        return self.model.score(X,Y)
+        """
+        return self.model.score(X, Y)
+
 
 def run_baseline(Y):
-    '''
+    """
     Calculates the accuracy of the majority baseline for true labels Y.
-    '''
+    """
     preds = np.zeros(len(Y))
     if np.mean(Y) > 0.5:
         preds = np.ones(len(Y))
-    print('\tTesting majority baseline')
-    print('\tAccuracy: ',accuracy_score(preds,Y),'\n')
-    print('='*50,'\n')
+    print("\tTesting majority baseline")
+    print("\tAccuracy: ", accuracy_score(preds, Y), "\n")
+    print("=" * 50, "\n")
+
 
 def run_training(X, Y, voters, features, message):
-    '''
+    """
     Trains a logistic regression model on the specified set of features.
     Evaluates the model using 5-fold cross validation.
 
@@ -129,10 +176,10 @@ def run_training(X, Y, voters, features, message):
     :param voters: flattened list of voters in training set
     :param features: dictionary mapping feature name to boolean
     :param message: message to print when showing results
-    '''
+    """
     # FILTER FEATURES FOR TRAINING
     X = model.filter_features(X, features)
-    print('\tModel: ',message,'\n')
+    print("\tModel: ", message, "\n")
 
     # SPLIT DATA FOR CROSS VALIDATION
     accuracy = []
@@ -156,95 +203,72 @@ def run_training(X, Y, voters, features, message):
 
         model.fit(X_train, Y_train)
         accuracy.append(model.evaluate(X_test, Y_test))
-    print('\tAccuracy: ',np.mean(accuracy),'\n')
-    print('='*50,'\n')
+    print("\tAccuracy: ", np.mean(accuracy), "\n")
+    print("=" * 50, "\n")
+
 
 def parse_config(config_file):
     # Check if file exists
-    fn_map = {"was_convinced": was_convinced, "was_flipped": was_flipped}
     if not os.path.isfile(config_file):
         print("Config file does not exist. Make sure path is correct.")
         exit()
-    with open(config_file, 'r') as f:
+    with open(config_file, "r") as f:
         config = json.load(f)
-    # Validate voter_fn
-    if config["voter_fn"] not in fn_map:
-        print("Provided voter function does not exist.")
-        exit()
     # Validate category
     if config["category"] == "":
         config["category"] = None
-    # TODO: Add a check to see if category is valid
-    # String to function conversion
-    config["voter_fn"] = fn_map[config["voter_fn"]]
     # Setup features in tuple format
     for k in config["user_features"]:
-        config["user_features"][k] = config["user_features"][k][0], config["user_features"][k][1]
+        config["user_features"][k] = (
+            config["user_features"][k][0],
+            config["user_features"][k][1],
+        )
     for k in config["ling_features"]:
-        config["ling_features"][k] = config["ling_features"][k][0], config["ling_features"][k][1]
+        config["ling_features"][k] = (
+            config["ling_features"][k][0],
+            config["ling_features"][k][1],
+        )
 
     return config
 
-if __name__=="__main__":
-    # if len(sys.argv) < 2:
-    #     print("Config File not passed in. Quitting ...")
-    #     exit()
-    # configuration = parse_config(sys.argv[1])
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Config File not passed in. Quitting ...")
+        exit()
+    configuration = parse_config(sys.argv[1])
     # LOAD DATA
-    print('\n','='*50,'\n\tLoading Dataset...\n')
-    with open('../debatedata/users.json', 'r') as f:
+    prepend_path = "/Users/vedantpuri/Downloads/"
+    print("\n", "=" * 50, "\n\tLoading Dataset...\n")
+    with open(prepend_path + "users.json", "r") as f:
         users = json.load(f)
-    with open('../debatedata/debates.json', 'r') as f:
+    with open(prepend_path + "debates.json", "r") as f:
         all_debates = json.load(f)
-    print('\t',len(all_debates),' debates and ',len(users),' users loaded\n')
+    print("\t", len(all_debates), " debates and ", len(users), " users loaded\n")
 
     # PROCESS DATA
-    print('\tProcessing Data...\n')
+    print("\tProcessing Data...\n")
     bigissues_dict = build_bigissues_dict(users)
 
     # SPECIFY CATEGORIES, CREATE MODEL, FORMAT FEATURES
-    # category = configuration['category'] # one of: {None, 'Politics', 'Religion', 'Miscellaneous', ...}
-    category = 'Politics'  # one of: {None, 'Politics', 'Religion', 'Miscellaneous', ...}
-    print('\tFiltered category of debates: ',category,'\n')
+    category = configuration[
+        "category"
+    ]  # one of: {None, 'Politics', 'Religion', 'Miscellaneous', ...}
+    print("\tFiltered category of debates: ", category, "\n")
     model = LogRegModel(category)
-    vectorizer = TfidfVectorizer(ngram_range=(1,3),max_features=50,stop_words='english')
-    X,Y,voters = model.extract_features(all_debates, users, bigissues_dict)
+    vectorizer = TfidfVectorizer(
+        ngram_range=(1, 3), max_features=50, stop_words="english"
+    )
+    X, Y, voters = model.extract_features(all_debates, users, bigissues_dict)
     scaler = StandardScaler()
     X = scaler.fit_transform(X)
     print(X.shape)
 
     # SPECIFY FEATURES AND RUN MODEL
-    # user_features = configuration['user_features']
-    # ling_features = configuration['ling_features']
-    user_features = {  # userbased features
-        'persuade': (True, 0),
-        'opinion': (True, 2),
-        'pol_ideology': (True, 2),
-        'rel_ideology': (True, 2),
-        'decidedness': (True, 1),
-        'undecidedness': (True, 1),
-        'gender': (True, 4)}
-    ling_features = {  # linguistic features
-        'length': (True, 1),
-        'ref_opp': (True, 1),
-        'politeness': (True, 1),
-        'evidence': (True, 1),
-        'sentiment': (True, 3),
-        'subjectivity': (True, 4),
-        'swear': (True, 1),
-        'connotation': (True, 2),
-        'pronouns': (True, 3),
-        'modals': (True, 9),
-        'spelling': (True, 1),
-        'numbers': (True, 1),
-        'excl_marks': (True, 1),
-        'questions': (True, 1),
-        'type_ratio': (True, 1),
-        'links': (True, 1),
-        'arg_lex': (True, 17),
-        'tfidf': (True, 50)}
+    user_features = configuration["user_features"]
+    ling_features = configuration["ling_features"]
     features = (user_features, ling_features)
-    message = '+ user + persuade + orig linguistic'
+    message = "+ user + persuade + orig linguistic"
 
     run_training(X, Y, voters, features, message)
 

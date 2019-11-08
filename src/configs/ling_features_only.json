@@ -1,6 +1,5 @@
 {
   "category": "",
-  "voter_fn": "was_convinced",
   "user_features" : {
                   "persuade":       [false,0],
                   "opinion":        [false,2],
