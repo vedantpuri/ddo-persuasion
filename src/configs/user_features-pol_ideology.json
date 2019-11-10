@@ -1,0 +1,32 @@
+{
+  "category": "",
+  "user_features" : {
+                  "persuade":       [true,0],
+                  "opinion":        [true,2],
+                  "pol_ideology":   [false,2],
+                  "rel_ideology":   [true,2],
+                  "decidedness":    [true,1],
+                  "undecidedness":  [true,1],
+                  "gender":         [true,4]
+                },
+"ling_features" : {
+              "length"        :[false,1],
+              "ref_opp"       :[false,1],
+              "politeness"    :[false,1],
+              "evidence"      :[false,1],
+              "sentiment"     :[false,3],
+              "subjectivity"  :[false,4],
+              "swear"         :[false,1],
+              "connotation"   :[false,2],
+              "pronouns"      :[false,3],
+              "modals"        :[false,9],
+              "spelling"      :[false,1],
+              "numbers"       :[false,1],
+              "excl_marks"    :[false,1],
+              "questions"     :[false,1],
+              "type_ratio"    :[false,1],
+              "links"         :[false,1],
+              "arg_lex"       :[false,17],
+              "tfidf"         :[false,50]}
+
+}
