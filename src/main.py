@@ -61,7 +61,10 @@ class LogRegModel:
         if not os.path.isfile("ttf.pickle"):
             print("No pickle file found")
             text_features = []
+            # i = 0
             for text in debate_text:
+                # i = i + 1
+                # print("processing:",i,"out of",len(debate_text))
                 to_add = text_to_features(text)
                 # print(to_add)
                 # exit()
@@ -233,43 +236,51 @@ def parse_config(config_file):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Config File not passed in. Quitting ...")
-        exit()
-    configuration = parse_config(sys.argv[1])
-    # LOAD DATA
-    prepend_path = "/Users/vedantpuri/Downloads/"
-    print("\n", "=" * 50, "\n\tLoading Dataset...\n")
-    with open(prepend_path + "users.json", "r") as f:
-        users = json.load(f)
-    with open(prepend_path + "debates.json", "r") as f:
-        all_debates = json.load(f)
-    print("\t", len(all_debates), " debates and ", len(users), " users loaded\n")
+    # if len(sys.argv) < 2:
+    #     print("Config File not passed in. Quitting ...")
+    #     exit()
+    # configuration = parse_config(sys.argv[1])
+    path = "./configs/"
+    files = os.listdir(path)
+    s = []
+    for file in files:
+        print("Configuration:",file)
+        # configuration = parse_config(path+file)
+        configuration = parse_config('./configs/user_features_only.json')
+        # LOAD DATA
+        prepend_path = "../debatedata/"
+        print("\n", "=" * 50, "\n\tLoading Dataset...\n")
+        with open(prepend_path + "users.json", "r") as f:
+            users = json.load(f)
+        with open(prepend_path + "debates.json", "r") as f:
+            all_debates = json.load(f)
+        print("\t", len(all_debates), " debates and ", len(users), " users loaded\n")
 
-    # PROCESS DATA
-    print("\tProcessing Data...\n")
-    bigissues_dict = build_bigissues_dict(users)
+        # PROCESS DATA
+        print("\tProcessing Data...\n")
+        bigissues_dict = build_bigissues_dict(users)
 
-    # SPECIFY CATEGORIES, CREATE MODEL, FORMAT FEATURES
-    category = configuration[
-        "category"
-    ]  # one of: {None, 'Politics', 'Religion', 'Miscellaneous', ...}
-    print("\tFiltered category of debates: ", category, "\n")
-    model = LogRegModel(category)
-    vectorizer = TfidfVectorizer(
-        ngram_range=(1, 3), max_features=50, stop_words="english"
-    )
-    X, Y, voters = model.extract_features(all_debates, users, bigissues_dict)
-    scaler = StandardScaler()
-    X = scaler.fit_transform(X)
-    print(X.shape)
+        # SPECIFY CATEGORIES, CREATE MODEL, FORMAT FEATURES
+        category = configuration[
+            "category"
+        ]  # one of: {None, 'Politics', 'Religion', 'Miscellaneous', ...}
+        print("\tFiltered category of debates: ", category, "\n")
+        model = LogRegModel(category)
+        vectorizer = TfidfVectorizer(
+            ngram_range=(1, 3), max_features=50, stop_words="english"
+        )
+        X, Y, voters = model.extract_features(all_debates, users, bigissues_dict)
+        scaler = StandardScaler()
+        X = scaler.fit_transform(X)
+        print(X.shape)
 
-    # SPECIFY FEATURES AND RUN MODEL
-    user_features = configuration["user_features"]
-    ling_features = configuration["ling_features"]
-    features = (user_features, ling_features)
-    message = "+ user + persuade + orig linguistic"
+        # SPECIFY FEATURES AND RUN MODEL
+        user_features = configuration["user_features"]
+        ling_features = configuration["ling_features"]
+        features = (user_features, ling_features)
+        # message = "+ user + persuade + orig linguistic"
+        message = file
 
-    run_training(X, Y, voters, features, message)
+        run_training(X, Y, voters, features, message)
 
-    run_baseline(Y)
+        run_baseline(Y)
