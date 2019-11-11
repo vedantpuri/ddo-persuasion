@@ -1,5 +1,6 @@
 import sys
 import json
+import time
 import os.path
 import copy
 import pickle
@@ -240,25 +241,32 @@ if __name__ == "__main__":
     #     print("Config File not passed in. Quitting ...")
     #     exit()
     # configuration = parse_config(sys.argv[1])
+    start_time = time.time()
     path = "./configs/"
     files = os.listdir(path)
     s = []
     for file in files:
         print("Configuration:",file)
-        # configuration = parse_config(path+file)
-        configuration = parse_config('./configs/user_features_only.json')
+        configuration = parse_config(path+file)
+        config_time = time.time()
+        print("Config parsing time",config_time  - start_time)
+        # configuration = parse_config('./configs/user_features_only.json')
         # LOAD DATA
-        prepend_path = "../debatedata/"
+        prepend_path = "/Users/vedantpuri/Downloads/"
         print("\n", "=" * 50, "\n\tLoading Dataset...\n")
         with open(prepend_path + "users.json", "r") as f:
             users = json.load(f)
         with open(prepend_path + "debates.json", "r") as f:
             all_debates = json.load(f)
         print("\t", len(all_debates), " debates and ", len(users), " users loaded\n")
+        dtl_time = time.time()
+        print("Data Loading time", dtl_time - config_time)
 
         # PROCESS DATA
         print("\tProcessing Data...\n")
         bigissues_dict = build_bigissues_dict(users)
+        proc_time = time.time()
+        print("Processing time", proc_time - dtl_time)
 
         # SPECIFY CATEGORIES, CREATE MODEL, FORMAT FEATURES
         category = configuration[
@@ -269,9 +277,16 @@ if __name__ == "__main__":
         vectorizer = TfidfVectorizer(
             ngram_range=(1, 3), max_features=50, stop_words="english"
         )
+        print("Model init time + vectorizer time", time.time() - proc_time)
+        before_feat_extr = time.time()
         X, Y, voters = model.extract_features(all_debates, users, bigissues_dict)
+        after_feat_extr = time.time()
+        print("Feat extraction time: ", after_feat_extr - before_feat_extr)
+        before_scalar_fit = time.time()
         scaler = StandardScaler()
         X = scaler.fit_transform(X)
+        after_scalar_time = time.time()
+        print("Scalar fit time", after_scalar_time - before_scalar_fit)
         print(X.shape)
 
         # SPECIFY FEATURES AND RUN MODEL
@@ -280,7 +295,8 @@ if __name__ == "__main__":
         features = (user_features, ling_features)
         # message = "+ user + persuade + orig linguistic"
         message = file
-
+        before_traing = time.time()
         run_training(X, Y, voters, features, message)
-
+        after_traing = time.time()
+        print("training time", after_traing - before_traing)
         run_baseline(Y)
