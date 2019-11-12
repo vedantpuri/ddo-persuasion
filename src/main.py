@@ -3,11 +3,13 @@ import json
 import os.path
 import copy
 import pickle
+import collections
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score
+from sklearn.utils import shuffle
 from sklearn.feature_extraction.text import TfidfVectorizer
 from data_processing import parse_debates, filter_category
 from user_features import *
@@ -234,6 +236,34 @@ def parse_config(config_file):
 
     return config
 
+def filter_samples(X, Y, majority_threshold):
+    # change their mind = 1
+    # stay the same = 0
+
+    # LOGIC -----
+    # count number of ones in Y
+    one_count = collections.Counter(Y)[1]
+    # that number should be minority
+    # calculate number of 0s we need in the DS
+    zero_count = one_count / (1 - majority_threshold)
+    ret_X, ret_Y = [], []
+    ctr = 0
+    for i in range(len(X)):
+    # iterate
+        if Y[i] == 1:
+            # add it
+            ret_X += [X[i]]
+            ret_Y += [Y[i]]
+        else:
+            if ctr < zero_count:
+                ret_X += [X[i]]
+                ret_Y += [Y[i]]
+                ctr += 1
+    print(zero_count, one_count)
+    print(len(ret_X))
+    print(len(ret_Y))
+    exit()
+    return np.array(ret_X), np.array(ret_Y)
 
 if __name__ == "__main__":
     # if len(sys.argv) < 2:
@@ -248,7 +278,7 @@ if __name__ == "__main__":
         # configuration = parse_config(path+file)
         configuration = parse_config('./configs/user_features_only.json')
         # LOAD DATA
-        prepend_path = "../debatedata/"
+        prepend_path = "/Users/vedantpuri/Downloads/"
         print("\n", "=" * 50, "\n\tLoading Dataset...\n")
         with open(prepend_path + "users.json", "r") as f:
             users = json.load(f)
@@ -273,6 +303,7 @@ if __name__ == "__main__":
         scaler = StandardScaler()
         X = scaler.fit_transform(X)
         print(X.shape)
+        print(Y.shape)
 
         # SPECIFY FEATURES AND RUN MODEL
         user_features = configuration["user_features"]
@@ -280,7 +311,8 @@ if __name__ == "__main__":
         features = (user_features, ling_features)
         # message = "+ user + persuade + orig linguistic"
         message = file
-
+        X, Y = shuffle(X, Y)
+        filter_samples(X, Y, 0.6)
         run_training(X, Y, voters, features, message)
 
         run_baseline(Y)
