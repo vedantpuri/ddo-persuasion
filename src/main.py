@@ -79,10 +79,12 @@ class LogRegModel:
             fileObject.close()
             # save to pickle
         else:
-            print("Pickle file found")
+            print("\tPickle file found\n")
             fileObject = open("ttf.pickle", "rb")
+            print("\tLoading pickle file ...\n")
             ttf = pickle.load(fileObject)
             text_features = [ttf[k] for k in debate_keys]
+            print("\tPickle file loaded.\n")
             fileObject.close()
 
         vectorizer.fit(text_list)
@@ -245,7 +247,7 @@ def filter_samples(X, Y, majority_threshold):
     one_count = collections.Counter(Y)[1]
     # that number should be minority
     # calculate number of 0s we need in the DS
-    zero_count = one_count / (1 - majority_threshold)
+    zero_count = ((one_count / (1 - majority_threshold)) - one_count)
     ret_X, ret_Y = [], []
     ctr = 0
     for i in range(len(X)):
