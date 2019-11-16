@@ -105,7 +105,7 @@ def parse_debates(debate_dict, users):
             con_debater = debate["participant_1_name"]
 
         if (
-            len(voters) > 0
+            len(voters) > 1
             and pro_debater in users.keys()
             and con_debater in users.keys()
         ):

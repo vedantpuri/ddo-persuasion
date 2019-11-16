@@ -5,6 +5,7 @@ import copy
 import pickle
 import collections
 import numpy as np
+import random
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import KFold
@@ -24,7 +25,8 @@ class LogRegModel:
         :param category: string or None, specifies the category of debates to
             filter for when processing the data for model input
         """
-        self.model = LogisticRegression(solver="lbfgs", max_iter=1000)
+        self.model = LogisticRegression(solver="lbfgs", max_iter=1000, class_weight='balanced')
+        # self.model = LogisticRegression(solver="lbfgs", max_iter=1000)
         self.category = category
 
     def __call__(self, X):
@@ -94,10 +96,13 @@ class LogRegModel:
         X_userbased = []
         X_linguistic = []
         Y = []
+        m = 0
         for debate_idx, voters in enumerate(debate_voters):
             # print(debate_idx)
             debater1, debater2 = debaters[debate_idx]
             for voter in voters:
+                # print(m)
+                m += 1
                 user_features = []
                 user_features.append(get_bigissues(bigissues_dict, voter, debater1))
                 user_features.append(get_bigissues(bigissues_dict, voter, debater2))
@@ -257,15 +262,16 @@ def filter_samples(X, Y, majority_threshold):
             ret_X += [X[i]]
             ret_Y += [Y[i]]
         else:
-            if ctr < zero_count:
+            if ctr < zero_count and random.random() > 0.5:
                 ret_X += [X[i]]
                 ret_Y += [Y[i]]
                 ctr += 1
     print(zero_count, one_count)
     print(len(ret_X))
     print(len(ret_Y))
-    exit()
+    # exit()
     return np.array(ret_X), np.array(ret_Y)
+
 
 if __name__ == "__main__":
     # if len(sys.argv) < 2:
@@ -277,10 +283,11 @@ if __name__ == "__main__":
     s = []
     for file in files:
         print("Configuration:",file)
-        # configuration = parse_config(path+file)
-        configuration = parse_config('./configs/user_features_only.json')
+        configuration = parse_config(path+file)
+        # configuration = parse_config('./configs/all_features.json')
         # LOAD DATA
-        prepend_path = "/Users/vedantpuri/Downloads/"
+        # prepend_path = "/Users/vedantpuri/Downloads/"
+        prepend_path = '../debatedata/'
         print("\n", "=" * 50, "\n\tLoading Dataset...\n")
         with open(prepend_path + "users.json", "r") as f:
             users = json.load(f)
@@ -314,7 +321,7 @@ if __name__ == "__main__":
         # message = "+ user + persuade + orig linguistic"
         message = file
         X, Y = shuffle(X, Y)
-        filter_samples(X, Y, 0.6)
+        # X, Y = filter_samples(X, Y, 0.5)
         run_training(X, Y, voters, features, message)
 
         run_baseline(Y)
