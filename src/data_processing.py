@@ -57,23 +57,12 @@ def votes_to_labels(users, votes):
     boolean, e.g. was_flipped, was_convinced
     Return equal number of changed and unchanged votes and labels from each debate
     """
-    # changed_voters, changed_voter_labels = [], []
-    # unchanged_voters, unchanged_voter_labels = [], []
     voters, labels = [], []
     for vote in votes:
         if vote["user_name"] in users.keys():
             winner = get_winner(vote["votes_map"])
             voters += [vote["user_name"]]
             labels += [winner]
-            # if winner == 1:
-            #     changed_voters.append(vote["user_name"])
-            #     changed_voter_labels.append(winner)
-            # else:
-            #     unchanged_voters.append(vote["user_name"])
-            #     unchanged_voter_labels.append(winner)
-    # cut_off = min(len(changed_voters), len(unchanged_voters))
-    # voters = changed_voters[:cut_off] + unchanged_voters[:cut_off]
-    # labels = changed_voter_labels[:cut_off] + unchanged_voter_labels[:cut_off]
 
     return voters, labels
 

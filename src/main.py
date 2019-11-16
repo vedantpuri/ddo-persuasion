@@ -1,20 +1,22 @@
 import sys
-import json
-import os.path
+import csv
 import copy
+import json
+import random
 import pickle
+import os.path
 import collections
 import numpy as np
-import random
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
+from user_features import *
+from sklearn.utils import shuffle
 from sklearn.model_selection import KFold
 from sklearn.metrics import accuracy_score
-from sklearn.utils import shuffle
-from sklearn.feature_extraction.text import TfidfVectorizer
-from data_processing import parse_debates, filter_category
-from user_features import *
 from language_features import text_to_features
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from data_processing import parse_debates, filter_category
+from sklearn.feature_extraction.text import TfidfVectorizer
+
 
 
 class LogRegModel:
@@ -174,8 +176,10 @@ def run_baseline(Y):
     if np.mean(Y) > 0.5:
         preds = np.ones(len(Y))
     print("\tTesting majority baseline")
-    print("\tAccuracy: ", accuracy_score(preds, Y), "\n")
+    baseline_acc = accuracy_score(preds, Y)
+    print("\tAccuracy: ", baseline_acc, "\n")
     print("=" * 50, "\n")
+    return baseline_acc
 
 
 def run_training(X, Y, voters, features, message):
@@ -215,8 +219,10 @@ def run_training(X, Y, voters, features, message):
 
         model.fit(X_train, Y_train)
         accuracy.append(model.evaluate(X_test, Y_test))
-    print("\tAccuracy: ", np.mean(accuracy), "\n")
+    avg_acc = np.mean(accuracy)
+    print("\tAccuracy: ", avg_acc, "\n")
     print("=" * 50, "\n")
+    return avg_acc
 
 
 def parse_config(config_file):
@@ -274,24 +280,26 @@ def filter_samples(X, Y, majority_threshold):
 
 
 if __name__ == "__main__":
-    # if len(sys.argv) < 2:
-    #     print("Config File not passed in. Quitting ...")
-    #     exit()
-    # configuration = parse_config(sys.argv[1])
+    if len(sys.argv) < 3:
+        print("Invalid number of arguments. Quitting ...")
     path = "./configs/"
     files = os.listdir(path)
-    s = []
-    for file in files:
-        print("Configuration:",file)
-        configuration = parse_config(path+file)
-        # configuration = parse_config('./configs/all_features.json')
+    data_path, output_fname = sys.argv[1], sys.argv[2]
+    output_file = open(output_fname, "w")
+    writer = csv.writer(output_file)
+    header_row = ["Configuration", "Baseline", "Model"]
+    writer.writerow(header_row)
+    for f_name in files:
+        # To ignore files like .DS_STORE
+        if f_name[-4:] != "json":
+            continue
+        print("\tCurrent Configuration:\t", f_name)
+        configuration = parse_config(path + f_name)
         # LOAD DATA
-        # prepend_path = "/Users/vedantpuri/Downloads/"
-        prepend_path = '../debatedata/'
         print("\n", "=" * 50, "\n\tLoading Dataset...\n")
-        with open(prepend_path + "users.json", "r") as f:
+        with open(data_path + "users.json", "r") as f:
             users = json.load(f)
-        with open(prepend_path + "debates.json", "r") as f:
+        with open(data_path + "debates.json", "r") as f:
             all_debates = json.load(f)
         print("\t", len(all_debates), " debates and ", len(users), " users loaded\n")
 
@@ -318,10 +326,11 @@ if __name__ == "__main__":
         user_features = configuration["user_features"]
         ling_features = configuration["ling_features"]
         features = (user_features, ling_features)
-        # message = "+ user + persuade + orig linguistic"
-        message = file
         X, Y = shuffle(X, Y)
         # X, Y = filter_samples(X, Y, 0.5)
-        run_training(X, Y, voters, features, message)
+        model_acc = run_training(X, Y, voters, features, f_name)
 
-        run_baseline(Y)
+        baseline_acc = run_baseline(Y)
+
+        information = [f_name, baseline_acc, model_acc]
+        writer.writerow(information)

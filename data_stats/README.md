@@ -1,5 +1,22 @@
 # Statistics
 
+## Figures
+
+*Note:* 60% is a threshold **variable**, one could change that in the code to set a custom threshold. Also users having only voted once have been filtered out.
+
+Figure file name keys:
+
+
+| Key        | Meaning|
+|:-------------:|:-------------:|
+| pol      | Political ideologies |
+| rel      | Religious ideologies     |
+| fickle | Changing stance more often than unchanging (changing >= 60% of the time)|
+| rigid | Not changing stance more often than changing (changing <= 40% of the time) |
+
+
+## Output Logs
+
 Output from running analyze.py to get the statistics
 
 ```terminal
