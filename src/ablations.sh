@@ -46,7 +46,7 @@ run_all() {
 
 # Run a specific config
 run_specific() {
-  echo -e "Running ${1}\n"
+  echo -e "Running ${1} \n"
   python main.py "${data_path}" "${output_file}" "${1}"
 }
 
@@ -57,7 +57,7 @@ run_jobs() {
   [[ "${jobs}" == "all" ]] && run_all && return
 
   # Run a single specific config
-  [[ "${jobs}" != *","* ]] && run_specific && return
+  [[ "${jobs}" != *","* ]] && run_specific "${jobs}" && return
 
   # Run a list of comma separated configs [no space before/after comma]
   for i in $(echo $jobs | sed "s/,/ /g")

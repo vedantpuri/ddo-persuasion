@@ -1,3 +1,7 @@
+import time
+
+program_start = time.time()
+
 import sys
 import csv
 import copy
@@ -280,6 +284,8 @@ def filter_samples(X, Y, majority_threshold):
 
 
 if __name__ == "__main__":
+    main_entry_time = time.time()
+    print("Time taken for imports = ", main_entry_time - program_start)
     if len(sys.argv) < 4:
         print("Invalid number of arguments. Quitting ...")
     path = "./configs/"
@@ -295,11 +301,17 @@ if __name__ == "__main__":
         header_row = ["Configuration", "Baseline", "Model"]
         writer.writerow(header_row)
 
+    output_file_setup = time.time()
+    print("Time taken to setup output file = ", output_file_setup - main_entry_time)
     # To ignore files like .DS_STORE
     if f_name[-4:] == "json":
 
         print("\tCurrent Configuration:\t", f_name)
         configuration = parse_config(path + f_name)
+
+        config_load_time = time.time()
+        print("Time taken to parse config = ", config_load_time - output_file_setup)
+
         # LOAD DATA
         print("\n", "=" * 50, "\n\tLoading Dataset...\n")
         with open(data_path + "users.json", "r") as f:
@@ -308,9 +320,15 @@ if __name__ == "__main__":
             all_debates = json.load(f)
         print("\t", len(all_debates), " debates and ", len(users), " users loaded\n")
 
+        dataset_load_time = time.time()
+        print("Time taken to load dataset = ", dataset_load_time - config_load_time)
+
         # PROCESS DATA
         print("\tProcessing Data...\n")
         bigissues_dict = build_bigissues_dict(users)
+        big_issue_build_time = time.time()
+        print("Building big issues dict time = ", big_issue_build_time - dataset_load_time)
+
 
         # SPECIFY CATEGORIES, CREATE MODEL, FORMAT FEATURES
         category = configuration[
@@ -318,12 +336,28 @@ if __name__ == "__main__":
         ]  # one of: {None, 'Politics', 'Religion', 'Miscellaneous', ...}
         print("\tFiltered category of debates: ", category, "\n")
         model = LogRegModel(category)
+        model_init_time = time.time()
+        print("Time taken to init model = ", model_init_time - big_issue_build_time)
+
+
         vectorizer = TfidfVectorizer(
             ngram_range=(1, 3), max_features=50, stop_words="english"
         )
+        vectorizer_init_time = time.time()
+        print("Time taken to init vectorizer = ", vectorizer_init_time - model_init_time)
+
+
         X, Y, voters = model.extract_features(all_debates, users, bigissues_dict)
+        extract_features_time = time.time()
+        print("Time taken to extract features = ", extract_features_time - vectorizer_init_time)
+
         scaler = StandardScaler()
+        std_scalar_init_time = time.time()
+        print("Time taken to init std scalar = ", std_scalar_init_time - extract_features_time)
+
         X = scaler.fit_transform(X)
+        scalar_fit_transform_time = time.time()
+        print("Time taken by scaler.fit_transform(X) = ", scalar_fit_transform_time - std_scalar_init_time)
         print(X.shape)
         print(Y.shape)
 
@@ -332,10 +366,16 @@ if __name__ == "__main__":
         ling_features = configuration["ling_features"]
         features = (user_features, ling_features)
         X, Y = shuffle(X, Y)
+        shuffle_time = time.time()
+        print("Shuffling time = ", shuffle_time - scalar_fit_transform_time)
         # X, Y = filter_samples(X, Y, 0.5)
         model_acc = run_training(X, Y, voters, features, f_name)
+        train_time = time.time()
+        print("Training time = ", train_time - shuffle_time)
 
         baseline_acc = run_baseline(Y)
+        baseline_time = time.time()
+        print("Baseline time = ", baseline_time - train_time)
 
         information = [f_name, baseline_acc, model_acc]
         writer.writerow(information)
