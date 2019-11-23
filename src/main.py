@@ -280,19 +280,24 @@ def filter_samples(X, Y, majority_threshold):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 4:
         print("Invalid number of arguments. Quitting ...")
     path = "./configs/"
     files = os.listdir(path)
-    data_path, output_fname = sys.argv[1], sys.argv[2]
-    output_file = open(output_fname, "w")
-    writer = csv.writer(output_file)
-    header_row = ["Configuration", "Baseline", "Model"]
-    writer.writerow(header_row)
-    for f_name in files:
-        # To ignore files like .DS_STORE
-        if f_name[-4:] != "json":
-            continue
+    data_path, output_fname, f_name = sys.argv[1], sys.argv[2], sys.argv[3].split("/")[-1]
+    # Check if output file exists from prvious run
+    if os.path.isfile(output_fname):
+        output_file = open(output_fname, "a")
+        writer = csv.writer(output_file)
+    else:
+        output_file = open(output_fname, "w")
+        writer = csv.writer(output_file)
+        header_row = ["Configuration", "Baseline", "Model"]
+        writer.writerow(header_row)
+
+    # To ignore files like .DS_STORE
+    if f_name[-4:] == "json":
+
         print("\tCurrent Configuration:\t", f_name)
         configuration = parse_config(path + f_name)
         # LOAD DATA
