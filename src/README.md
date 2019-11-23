@@ -18,7 +18,7 @@ Follow instructions in this README to get the code running!
 A couple of **important** notes:
 - For options taking in values, no equal to sign ```=``` is needed. The value can be just specified after the space, eg. ```-c all_features.json```
 - For ```-c``` if providing a comma separated list, ensure that there is no space before or after the comma
-- There is a specific order that needs to be followed by the args for the script to work correctly. The order is same as top to bottom in the above table, i.e. for example, ```-f``` should always come after ```-o``` and ```-c``` should always be the last arg (because thats when the job starts running)
+- There is a specific order that needs to be followed by the args for the script to work correctly. The order is same as top to bottom in the above table, i.e. for example, ```-f``` should always come after ```-o```, and ```-c``` should always be the last arg (because thats when the job starts running)
 - It is **assumed** that the configs are placed in  ```configs/```
 
 ### Example Command
