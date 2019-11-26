@@ -34,7 +34,6 @@ Lables:
 - 1: User changes his stance after the debate
 - 0: User stays on the same side after the debate
 
-*Note:* We discard the case when the voter was in the middle and stayed in the middle since that doesn't provide insight into the task.
 
 Model Type: Logistic Regression
 
