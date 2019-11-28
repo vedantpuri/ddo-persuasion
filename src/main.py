@@ -205,17 +205,17 @@ def run_training(X, Y, voters, features, message):
         Y_train, Y_test = Y[train_idx], Y[test_idx]
 
         # ADD PERSUADABILITY FEATURE FOR TRAINING GROUP
-        # if features[0]['persuade'][0]:
-        #     v_train = [voters[idx] for idx in train_idx]
-        #     p = []
-        #     for voter in v_train:
-        #         p.append(get_persuadability(users, v_train, voter))
-        #     X_train = np.insert(X_train,0,p,axis=1)
-        #     v_test = [voters[idx] for idx in test_idx]
-        #     p = []
-        #     for voter in v_test:
-        #         p.append(get_persuadability(users, v_test, voter))
-        #     X_test = np.insert(X_test,0,p,axis=1)
+        if features[0]['persuade'][0]:
+            v_train = [voters[idx] for idx in train_idx]
+            p = []
+            for voter in v_train:
+                p.append(get_persuadability(users, v_train, voter))
+            X_train = np.insert(X_train,0,p,axis=1)
+            v_test = [voters[idx] for idx in test_idx]
+            p = []
+            for voter in v_test:
+                p.append(get_persuadability(users, v_test, voter))
+            X_test = np.insert(X_test,0,p,axis=1)
 
         model.fit(X_train, Y_train)
         accuracy.append(model.evaluate(X_test, Y_test))
