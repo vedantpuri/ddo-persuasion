@@ -5,6 +5,10 @@ import sys
 avg_acc = {}
 output_files_dir = sys.argv[1]
 
+# Precaution
+if output_files_dir[-1] != "/":
+    output_files_dir += "/"
+
 ctr  = 0
 for filename in os.listdir(output_files_dir):
     if filename[-3:] == "csv":

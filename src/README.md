@@ -25,3 +25,13 @@ A couple of **important** notes:
 ```bash
 ./ablations.sh -d /Users/vedantpuri/Downloads -o out.csv -f -c all
 ```
+
+
+## average.py
+
+In order to run multiple ablations and finding out the average results from the csv, I wrote this utility script. To run it simply run:
+```bash
+python average.py /path/to/output/folder/
+```
+
+where ```/path/to/output/folder/``` is simply the path to the folder containing all the output csv files. 
