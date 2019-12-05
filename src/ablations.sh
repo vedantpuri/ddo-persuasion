@@ -38,7 +38,7 @@ print_usage() {
 # Run all configs
 run_all() {
   echo -e "Running all configurations\n"
-  for file in "${configs_dir}"/*
+  for file in "${configs_dir}"/*/*
   do
     python main.py "${data_path}" "${output_file}" "${file}"
   done
@@ -48,6 +48,7 @@ run_all() {
 run_specific() {
   echo -e "Running ${1}\n"
   python main.py "${data_path}" "${output_file}" "${1}"
+
 }
 
 # Determine and run the configs
