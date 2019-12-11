@@ -282,9 +282,7 @@ def filter_samples(X, Y, majority_threshold):
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print("Invalid number of arguments. Quitting ...")
-    path = "./configs/"
-    files = os.listdir(path)
-    data_path, output_fname, f_name = sys.argv[1], sys.argv[2], sys.argv[3].split("/")[-1]
+    data_path, output_fname, f_name = sys.argv[1], sys.argv[2], sys.argv[3]
     # Check if output file exists from prvious run
     if os.path.isfile(output_fname):
         output_file = open(output_fname, "a")
@@ -298,8 +296,9 @@ if __name__ == "__main__":
     # To ignore files like .DS_STORE
     if f_name[-4:] == "json":
 
-        print("\tCurrent Configuration:\t", f_name)
-        configuration = parse_config(path + f_name)
+        print("\tCurrent Configuration:\t", f_name.split("/")[-1])
+        configuration = parse_config(f_name)
+
         # LOAD DATA
         print("\n", "=" * 50, "\n\tLoading Dataset...\n")
         with open(data_path + "users.json", "r") as f:
