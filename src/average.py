@@ -27,3 +27,9 @@ for filename in os.listdir(output_files_dir):
 
 for k in avg_acc:
     print(k, "\t\t" , avg_acc[k] / ctr)
+
+with open('outputs_final.csv', 'w') as csvfile:
+    writer = csv.writer(csvfile)
+    for k in avg_acc:
+        writer.writerow([k,avg_acc[k]/ctr])
+

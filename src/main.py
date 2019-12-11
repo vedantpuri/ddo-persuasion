@@ -27,8 +27,8 @@ class LogRegModel:
         :param category: string or None, specifies the category of debates to
             filter for when processing the data for model input
         """
-        self.model = LogisticRegression(solver="lbfgs", max_iter=1000, class_weight='balanced')
-        # self.model = LogisticRegression(solver="lbfgs", max_iter=1000)
+        # self.model = LogisticRegression(solver="lbfgs", max_iter=1000, class_weight='balanced')
+        self.model = LogisticRegression(solver="lbfgs", max_iter=1000)
         self.category = category
 
     def __call__(self, X):
@@ -331,7 +331,7 @@ if __name__ == "__main__":
         ling_features = configuration["ling_features"]
         features = (user_features, ling_features)
         X, Y = shuffle(X, Y)
-        # X, Y = filter_samples(X, Y, 0.5)
+        X, Y = filter_samples(X, Y, 0.5)
         model_acc = run_training(X, Y, voters, features, f_name)
 
         baseline_acc = run_baseline(Y)
