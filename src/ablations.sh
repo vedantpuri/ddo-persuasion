@@ -10,7 +10,7 @@ normal="$(tput sgr0)"
 divider="=============================="
 
 # Script information
-script_version="1.0.0"
+script_version="1.1.0"
 
 # Environment info
 curr_dir="$(pwd)/"
@@ -44,8 +44,19 @@ run_all() {
   done
 }
 
+
+# Run directory
+run_dir() {
+  echo -e "Running directory routine for ${1#*=}\n"
+  for file in "${configs_dir}/${1#*=}"/*
+  do
+    python main.py "${data_path}" "${output_file}" "${file}"
+  done
+}
+
 # Run a specific config
 run_specific() {
+  [[ ! -f "${1}" ]] && echo "Specific Config File doesn't exit" && exit
   echo -e "Running ${1}\n"
   python main.py "${data_path}" "${output_file}" "${1}"
 
@@ -56,6 +67,9 @@ run_jobs() {
   jobs="${1}"
   # Run all
   [[ "${jobs}" == "all" ]] && run_all && return
+
+  # Run specific directory of configs
+  [[ "${jobs::3}" == "dir" ]] && run_dir "${jobs}" && return
 
   # Run a single specific config
   [[ "${jobs}" != *","* ]] && run_specific "${jobs}" && return
