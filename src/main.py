@@ -336,5 +336,5 @@ if __name__ == "__main__":
 
         baseline_acc = run_baseline(Y)
 
-        information = [f_name, baseline_acc, model_acc]
+        information = [f_name.split("/")[-1], baseline_acc, model_acc]
         writer.writerow(information)
