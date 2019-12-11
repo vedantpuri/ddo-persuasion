@@ -1,7 +1,7 @@
 #!/bin/bash
 # ablations.sh
 # Author: Vedant Puri
-# Version: 1.0.0
+# Version: 1.1.0
 
 # Console text preferences
 underline="$(tput smul)"
